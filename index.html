@@ -1,0 +1,142 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Showdown</title>
+    <link rel="stylesheet" href="showdownStyle.css">
+</head>
+<body>
+    <div class="timer" id="timer">10</div>
+    <div class="rounds" id="rounds">Rounds won: 0</div>
+    <button class="start-button" onclick="startGame()">Start</button>
+
+    <br />
+    <div id="row1">
+        <img onclick="shot('loc1')" id="loc1" class="hidden" src="cowpoke.jpg" alt="Cowboy aiming gun towards the screen" />
+        <img onclick="shot('loc2')" id="loc2" class="hidden" src="cowpoke.jpg" alt="Cowboy aiming gun towards the screen" />
+        <img onclick="shot('loc3')" id="loc3" class="hidden" src="cowpoke.jpg" alt="Cowboy aiming gun towards the screen" />
+    </div>
+
+    <br />
+
+    <div id="row2">
+        <img onclick="shot('loc4')" id="loc4" class="hidden" src="cowpoke.jpg" alt="Cowboy aiming gun towards the screen" />
+        <img onclick="shot('loc5')" id="loc5" class="hidden" src="cowpoke.jpg" alt="Cowboy aiming gun towards the screen" />
+        <img onclick="shot('loc6')" id="loc6" class="hidden" src="cowpoke.jpg" alt="Cowboy aiming gun towards the screen" />
+    </div>
+
+    <script>
+        var timerInterval;
+        var cowboysToClick = 3;
+        var clickedCowboys = 0;
+        var roundsWon = 0;
+        var initialTimerDuration = 10;
+        var minTimerDuration = 2;
+        var maxCowboys = 6;
+        var audioInstances = [];
+        var maxAudioInstances = 5;
+
+
+
+
+
+        function shot(location) {
+            var target = document.getElementById(location);
+
+            if (!target.classList.contains('hidden')) {
+                if (target.src.includes('cowpoke.jpg')) {
+                    shotsound();
+                    target.src = 'skull.png';
+                    target.alt = 'A cartoonish skull and crossbones';
+                    clickedCowboys++;
+                    checkGameStatus();
+
+                }
+            }
+        }
+
+        function shotsound() {
+            // Create a new audio instance
+            var audio = new Audio('shot.mp3');
+            audio.volume = 0.2; // Set default volume to 1 (full volume)
+            audioInstances.push(audio);
+
+            // Limit the number of concurrent audio instances
+            if (audioInstances.length > maxAudioInstances) {
+                // Remove the oldest audio instance to maintain the limit
+                var oldestAudio = audioInstances.shift();
+                oldestAudio.pause(); // Pause and release the oldest audio
+            }
+
+            // Play the audio
+            audio.play();
+        }
+
+
+        function checkGameStatus() {
+            if (clickedCowboys === cowboysToClick) {
+                clearInterval(timerInterval);
+                document.getElementById('timer').innerHTML = 'You Win!';
+                disableCowboys();
+                roundsWon++;
+                document.getElementById('rounds').innerHTML = 'Rounds won: ' + roundsWon;
+
+                // Adjust timer duration and add more cowboys for the next round
+                initialTimerDuration = Math.max(minTimerDuration, initialTimerDuration - 2);
+                cowboysToClick = Math.min(maxCowboys, cowboysToClick + 1);
+
+                // Delay starting the next round by 2 seconds
+                setTimeout(startGame, 2000);
+            }
+         }
+
+        function disableCowboys() {
+            var cowboys = document.querySelectorAll('img');
+            for (var i = 0; i < cowboys.length; i++) {
+                cowboys[i].onclick = null;
+            }
+        }
+
+        function countdown() {
+            var timerElement = document.getElementById('timer');
+            var timeLeft = parseInt(timerElement.innerHTML);
+
+            if (timeLeft > 0) {
+                timerElement.innerHTML = timeLeft - 1;
+            } else {
+                clearInterval(timerInterval);
+                document.getElementById('timer').innerHTML = 'Time\'s up! You Lose!';
+                disableCowboys();
+
+            }
+        }
+
+        function startGame() {
+            var allCowboys = document.querySelectorAll('img');
+            for (var i = 0; i < allCowboys.length; i++) {
+                allCowboys[i].src = 'cowpoke.jpg';
+                allCowboys[i].alt = 'Cowboy aiming gun towards the screen';
+                allCowboys[i].classList.add('hidden');
+                allCowboys[i].onclick = function () { shot(this.id); };
+            }
+
+            var randomCowboys = [];
+            while (randomCowboys.length < cowboysToClick) {
+                var randomIndex = Math.floor(Math.random() * allCowboys.length);
+                if (randomCowboys.indexOf(randomIndex) === -1) {
+                    randomCowboys.push(randomIndex);
+                }
+            }
+
+            for (var j = 0; j < randomCowboys.length; j++) {
+                var randomCowboy = allCowboys[randomCowboys[j]];
+                randomCowboy.classList.remove('hidden');
+            }
+
+            clickedCowboys = 0;
+            document.getElementById('timer').innerHTML = initialTimerDuration;
+            timerInterval = setInterval(countdown, 1000);
+            document.querySelector('.start-button').disabled = true;
+        }
+    </script>
+</body>
+</html>
